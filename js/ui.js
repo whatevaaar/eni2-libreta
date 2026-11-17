@@ -187,23 +187,27 @@
         var tieneAlgo = s.incluidas.length > 0;
         var sumaCell = cell["suma-" + sub.id], estCell = cell["est-" + sub.id], pctCell = cell["pctsub-" + sub.id];
         if (!tieneAlgo) {
-          sumaCell.querySelector(".suma").textContent = "—";
-          estCell.querySelector(".estandar").textContent = "—";
+          sumaCell.innerHTML = '<span class="suma">—</span>';
+          estCell.innerHTML = '<span class="estandar">—</span>';
           pctCell.textContent = "—";
           return;
         }
-        sumaCell.querySelector(".suma").textContent = s.suma + (s.faltantes.length ? " ⚠" : "");
+        sumaCell.innerHTML = '<span class="suma">' + s.suma + (s.faltantes.length ? " ⚠" : "") + '</span>';
         sumaCell.title = s.faltantes.length ? ("Faltan escalares: " + s.faltantes.join(", ")) : "";
+        estCell.dataset.suma = s.suma;
         var d = eng.apendiceD(sub.dcol, s.suma);
+        var btnEdit = ' <button class="fuente-btn" data-edit-d="1" title="Corregir puntuación estándar">✎</button>';
         if (d.estandar != null) {
-          estCell.querySelector(".estandar").textContent = d.estandar + (d.fuente === "correccion" ? " ✎" : "");
+          var corr = d.fuente === "correccion";
+          estCell.innerHTML = '<span class="estandar' + (corr ? ' val-correccion' : '') + '">' + d.estandar + '</span>' +
+            (corr ? '<span class="chip chip-corr">corr</span>' : '') + btnEdit;
           pctCell.textContent = fmt(d.percentil);
           valoresPerfil[sub.id] = d.estandar;
         } else {
-          estCell.querySelector(".estandar").innerHTML = '<span class="val-pendiente">ver D</span>';
+          estCell.innerHTML = '<span class="val-pendiente">captúralo</span>' + btnEdit;
           pctCell.textContent = "—";
         }
-        estCell.dataset.suma = s.suma;
+        estCell.querySelector('[data-edit-d]').addEventListener("click", function (ev) { ev.stopPropagation(); editarEstandar(sub); });
       });
     });
 
@@ -250,25 +254,32 @@
     recompute();
   }
 
+  // Corrige la Puntuación estándar (Apéndice D) de un subdominio, persistente por (dcol, suma).
+  function editarEstandar(sub) {
+    var b = banda(); if (!b) { alert("Primero ingresa una edad válida."); return; }
+    var estCell = cell["est-" + sub.id];
+    var suma = estCell ? estCell.dataset.suma : null;
+    if (suma == null) { alert("Captura primero los brutos de este subdominio para obtener la suma de escalares."); return; }
+    var cur = eng.apendiceD(sub.dcol, suma);
+    var ve = prompt("Puntuación estándar correcta para «" + sub.nombre + "» (suma de escalares = " + suma + "):\nDéjalo vacío para quitar la corrección.", cur.estandar != null ? cur.estandar : "");
+    if (ve === null) return;
+    if (ve.trim() === "") { store.setApendiceD(sub.dcol, String(suma), null); recompute(); return; }
+    var est = parseInt(ve, 10);
+    if (isNaN(est)) { alert("La puntuación estándar debe ser un número."); return; }
+    var vp = prompt("Percentil correspondiente (0.1–99):", cur.percentil != null ? cur.percentil : "");
+    if (vp === null) return;
+    store.setApendiceD(sub.dcol, String(suma), { estandar: est, percentil: parseFloat(vp), t: cur.t });
+    recompute();
+  }
+
   function abrirApendiceD(sub) {
     var estCell = cell["est-" + sub.id];
     var suma = estCell ? estCell.dataset.suma : null;
     mostrarModal({
       titulo: "Apéndice D — " + sub.nombre,
-      hint: "Lee la columna «" + sub.nombre + "»" + (suma != null ? ", fila suma = " + suma : "") + ". Verifica estándar y percentil contra esta imagen.",
+      hint: "Lee la columna «" + sub.nombre + "»" + (suma != null ? ", fila suma = " + suma : "") + ". Verifica estándar y percentil contra esta imagen; corrige con el botón ✎ Corregir.",
       src: "assets/tablas/pdf195.jpg",
-      edit: function () {
-        if (suma == null) { alert("Primero captura los brutos del subdominio para obtener la suma."); return; }
-        var cur = eng.apendiceD(sub.dcol, suma);
-        var ve = prompt("Puntuación estándar correcta para «" + sub.nombre + "» (suma " + suma + "):", cur.estandar != null ? cur.estandar : "");
-        if (ve === null) return;
-        if (ve.trim() === "") { store.setApendiceD(sub.dcol, String(suma), null); recompute(); return; }
-        var est = parseInt(ve, 10);
-        var vp = prompt("Percentil correspondiente (0.1–99):", cur.percentil != null ? cur.percentil : "");
-        if (vp === null) return;
-        store.setApendiceD(sub.dcol, String(suma), { estandar: est, percentil: parseFloat(vp) });
-        recompute();
-      }
+      edit: function () { editarEstandar(sub); }
     });
   }
 
@@ -298,6 +309,9 @@
     else { img.removeAttribute("src"); img.style.display = "none"; abrir.style.display = "none"; }
     var m = $("modal-fuente"); m.hidden = false;
     m._edit = o.edit || null;
+    var be = $("modal-editar");
+    if (o.edit) { be.hidden = false; be.onclick = function () { o.edit(); }; }
+    else { be.hidden = true; be.onclick = null; }
   }
   function cerrarModal() { $("modal-fuente").hidden = true; }
 
@@ -357,8 +371,6 @@
 
     document.querySelectorAll("[data-cerrar]").forEach(function (b) { b.addEventListener("click", cerrarModal); });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape") cerrarModal(); });
-    // botón editar dentro del modal (en el hint)
-    $("modal-hint").addEventListener("dblclick", function () { var m = $("modal-fuente"); if (m._edit) m._edit(); });
   }
 
   // ---------- Init ----------
