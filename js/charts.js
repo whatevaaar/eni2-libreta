@@ -111,13 +111,15 @@
     var puntos = [];
     subs.forEach(function (sid, i) {
       var val = valores[sid];
+      // valor numérico para graficar (acepta notación "<51" -> 51); etiqueta = valor original
+      var num = (typeof val === "string") ? parseFloat(val.replace(/[^0-9.\-]/g, "")) : val;
       // etiqueta X (nombre corto) rotada
       var info = infoSub[sid] || { nombre: sid, dom: "" };
       var lbl = info.nombre.length > 22 ? info.nombre.slice(0, 21) + "…" : info.nombre;
       var tx = xDe(i), ty = padT + plotH + 10;
       add("text", { x: tx, y: ty, transform: "rotate(60 " + tx + " " + ty + ")", "text-anchor": "start", class: "xlbl", "font-size": "10" }, (info.dom ? info.dom + "· " : "") + lbl);
-      if (val != null && val >= ejeY.min - 50) {
-        var yy = Math.max(padT, Math.min(padT + plotH, yDe(val)));
+      if (num != null && !isNaN(num) && num >= ejeY.min - 50) {
+        var yy = Math.max(padT, Math.min(padT + plotH, yDe(num)));
         puntos.push({ x: tx, y: yy, v: val, sid: sid });
       } else {
         puntos.push(null);

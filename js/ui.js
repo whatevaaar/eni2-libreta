@@ -234,7 +234,20 @@
     tdP.textContent = (r.percentil != null) ? fmt(r.percentil) : "—";
   }
 
-  function fmt(x) { if (x == null) return "—"; return (x < 1 ? x : Math.round(x)).toString(); }
+  function fmt(x) {
+    if (x == null) return "—";
+    if (typeof x === "string") return x;           // notación de piso del Manual, p.ej. "<0.1"
+    return (x < 1 ? x : Math.round(x)).toString();
+  }
+
+  // Acepta número (70, 0.1) o notación de piso del Manual (<51, <0.1, >99). Devuelve
+  // { empty } | { invalido } | { valor } donde valor es Number o la cadena con "<"/">".
+  function parseValorBaremo(s) {
+    s = String(s).trim().replace(/\s+/g, "");
+    if (s === "") return { empty: true };
+    if (/^[<>]?-?\d+(\.\d+)?$/.test(s)) return { valor: /[<>]/.test(s) ? s : Number(s) };
+    return { invalido: true };
+  }
 
   // ---------- Edición de correcciones ----------
   function editarEscalar(p) {
@@ -261,14 +274,16 @@
     var suma = estCell ? estCell.dataset.suma : null;
     if (suma == null) { alert("Captura primero los brutos de este subdominio para obtener la suma de escalares."); return; }
     var cur = eng.apendiceD(sub.dcol, suma);
-    var ve = prompt("Puntuación estándar correcta para «" + sub.nombre + "» (suma de escalares = " + suma + "):\nDéjalo vacío para quitar la corrección.", cur.estandar != null ? cur.estandar : "");
+    var ve = prompt("Puntuación estándar correcta para «" + sub.nombre + "» (suma de escalares = " + suma + "):\nUsa un número (p.ej. 70) o la notación del Manual (p.ej. <51). Vacío = quitar la corrección.", cur.estandar != null ? cur.estandar : "");
     if (ve === null) return;
-    if (ve.trim() === "") { store.setApendiceD(sub.dcol, String(suma), null); recompute(); return; }
-    var est = parseInt(ve, 10);
-    if (isNaN(est)) { alert("La puntuación estándar debe ser un número."); return; }
-    var vp = prompt("Percentil correspondiente (0.1–99):", cur.percentil != null ? cur.percentil : "");
+    var pe = parseValorBaremo(ve);
+    if (pe.empty) { store.setApendiceD(sub.dcol, String(suma), null); recompute(); return; }
+    if (pe.invalido) { alert("Valor inválido. Usa un número (70) o la notación del Manual (<51)."); return; }
+    var vp = prompt("Percentil correspondiente (p.ej. 2 o <0.1):", cur.percentil != null ? cur.percentil : "");
     if (vp === null) return;
-    store.setApendiceD(sub.dcol, String(suma), { estandar: est, percentil: parseFloat(vp), t: cur.t });
+    var pp = parseValorBaremo(vp);
+    if (pp.invalido) { alert("Percentil inválido. Usa un número (2) o la notación del Manual (<0.1)."); return; }
+    store.setApendiceD(sub.dcol, String(suma), { estandar: pe.valor, percentil: pp.empty ? null : pp.valor, t: cur.t });
     recompute();
   }
 

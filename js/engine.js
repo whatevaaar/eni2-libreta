@@ -30,9 +30,24 @@
     return String(anios);
   }
 
+  // ---------- Correcciones incorporadas (capa base del baremo) ----------
+  // Prioridad: store (localStorage del usuario) > correccionesBase (incorporadas) > auto.
+  function baseEscalar(banda, pruebaId, bruto) {
+    var m = E.correccionesBase && E.correccionesBase.escalar;
+    return m ? (m[banda + "|" + pruebaId + "|" + bruto] || null) : null;
+  }
+  function baseApendiceD(dcol, suma) {
+    var m = E.correccionesBase && E.correccionesBase.apendiceD;
+    return m ? (m[dcol + "|" + suma] || null) : null;
+  }
+  function baseCompartida(escalar) {
+    var m = E.correccionesBase && E.correccionesBase.compartida;
+    return m ? (m[String(escalar)] || null) : null;
+  }
+
   // ---------- Tabla compartida escalar -> percentil/T ----------
   function compartida(escalar) {
-    var ov = E.store && E.store.getCompartida(escalar);
+    var ov = (E.store && E.store.getCompartida(escalar)) || baseCompartida(escalar);
     if (ov) return { percentil: ov.percentil, t: ov.t, fuente: "correccion" };
     var base = E.compartida && E.compartida[String(escalar)];
     if (base) return { percentil: base.percentil, t: base.t, fuente: "auto" };
@@ -102,8 +117,8 @@
     var R = Number(bruto);
     if (isNaN(R) || R < 0) { out.error = "bruto_invalido"; return out; }
 
-    // 1) corrección persistente tiene prioridad
-    var ov = E.store && E.store.getEscalar(banda, pruebaId, String(bruto));
+    // 1) corrección del usuario (localStorage) o incorporada (base) tienen prioridad
+    var ov = (E.store && E.store.getEscalar(banda, pruebaId, String(bruto))) || baseEscalar(banda, pruebaId, String(bruto));
     if (ov && ov.escalar != null) {
       out.escalar = ov.escalar;
       out.fuente = "correccion";
@@ -173,7 +188,7 @@
   // Filas: { s: suma, estandar, percentil, t }. Mismo criterio de borde que escalar.
   function apendiceD(dcol, suma) {
     var out = { estandar: null, percentil: null, t: null, fuente: "pendiente", borde: null };
-    var ov = E.store && E.store.getApendiceD(dcol, String(suma));
+    var ov = (E.store && E.store.getApendiceD(dcol, String(suma))) || baseApendiceD(dcol, String(suma));
     if (ov && ov.estandar != null) {
       out.estandar = ov.estandar; out.percentil = ov.percentil; out.t = ov.t; out.fuente = "correccion";
       return out;
