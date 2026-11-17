@@ -1,0 +1,5 @@
+# Material de trabajo / extracción (no publicar): renders, perfiles de chrome, PDFs fuente
+_work/
+*.pdf
+.DS_Store
+Thumbs.db

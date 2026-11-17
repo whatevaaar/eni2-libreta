@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ENI-2 · Asistente de la Libreta de Puntajes</title>
+<meta name="description" content="Asistente de cálculo de la Libreta de Puntajes del ENI-2. Todo el cálculo corre en tu navegador; no se almacenan datos personales." />
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<header class="app-header">
+  <div class="wrap">
+    <h1>ENI-2 · Asistente de la Libreta de Puntajes</h1>
+    <p class="sub">El cálculo corre 100% en tu navegador. <strong>No se almacenan datos del evaluado</strong> (edad y puntajes brutos viven solo en esta sesión y se borran al refrescar). Solo persisten tus <em>correcciones a los baremos</em>.</p>
+  </div>
+</header>
+
+<section class="controls wrap" aria-label="Controles">
+  <div class="edad">
+    <label>Edad del evaluado:
+      <input type="number" id="edad-anios" min="5" max="16" step="1" inputmode="numeric" placeholder="años" />
+      <span>años</span>
+      <input type="number" id="edad-meses" min="0" max="11" step="1" inputmode="numeric" placeholder="meses" />
+      <span>meses</span>
+    </label>
+    <span id="edad-banda" class="banda"></span>
+    <span id="edad-error" class="error" role="alert"></span>
+  </div>
+
+  <div class="acciones">
+    <span id="correcciones-badge" class="badge" title="Correcciones a baremos guardadas en este navegador">0 correcciones</span>
+    <button id="btn-exportar" type="button" class="btn">Exportar correcciones</button>
+    <label class="btn btn-file">Importar<input type="file" id="file-importar" accept="application/json" hidden /></label>
+    <button id="btn-limpiar-evaluado" type="button" class="btn btn-warn" title="Borra edad y brutos capturados en esta sesión">Limpiar evaluado</button>
+    <button id="btn-imprimir" type="button" class="btn">Imprimir / PDF</button>
+  </div>
+</section>
+
+<main class="wrap">
+  <div id="aviso-sin-edad" class="nota-info">Ingresa una edad válida (5;0 a 16;11) para calcular escalares y percentiles por prueba.</div>
+
+  <section id="hoja" aria-label="Hoja de registro de puntajes"></section>
+
+  <section id="graficas" class="graficas" aria-label="Gráficas de perfil">
+    <div class="graficas-head">
+      <h2>Gráficas de perfil</h2>
+      <div class="ejeY-controls">
+        <label>Eje Y mín <input type="number" id="ejeY-min" step="5" /></label>
+        <label>máx <input type="number" id="ejeY-max" step="5" /></label>
+        <label><input type="checkbox" id="ejeY-lineas" checked /> líneas de referencia</label>
+        <button id="ejeY-reset" type="button" class="btn btn-sm">Restablecer</button>
+      </div>
+    </div>
+    <div class="tabs" id="grafica-tabs"></div>
+    <div id="grafica-cont" class="grafica-cont"></div>
+  </section>
+</main>
+
+<footer class="app-footer wrap">
+  <p>Herramienta de apoyo para acelerar el llenado de la Libreta de Puntajes del ENI-2 (Matute, Rosselli, Ardila, Ostrosky). Los baremos pertenecen a sus autores/editorial; esta app no sustituye el Manual. Verifica cada valor con la imagen-fuente mostrada.</p>
+  <p id="estado-datos" class="estado-datos"></p>
+</footer>
+
+<!-- Modal de fuente (verificación en el punto de uso) -->
+<div id="modal-fuente" class="modal" hidden>
+  <div class="modal-bg" data-cerrar></div>
+  <div class="modal-card">
+    <div class="modal-head">
+      <strong id="modal-titulo">Tabla fuente</strong>
+      <div>
+        <a id="modal-abrir" href="#" target="_blank" rel="noopener" class="btn btn-sm">Abrir imagen</a>
+        <button type="button" class="btn btn-sm" data-cerrar>Cerrar ✕</button>
+      </div>
+    </div>
+    <p class="modal-hint" id="modal-hint"></p>
+    <div class="modal-img-wrap">
+      <img id="modal-img" alt="Tabla fuente del Apéndice" />
+    </div>
+  </div>
+</div>
+
+<!-- Datos -->
+<script src="js/datos/estructura.js"></script>
+<script src="js/datos/compartida.js"></script>
+<script src="js/datos/mapa.js"></script>
+<script src="js/datos/tablas.js"></script>
+<script src="js/datos/apendiceD.js"></script>
+<!-- Lógica -->
+<script src="js/store.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>
