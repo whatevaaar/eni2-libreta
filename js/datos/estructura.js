@@ -152,7 +152,7 @@ window.ENI2.dominios = [
       { id: "8.1.4", nombre: "Dictado de no palabras", max: "8", asterisco: false, norma: true },
       { id: "8.1.5", nombre: "Dictado de oraciones", max: "20", asterisco: false, norma: true },
       { id: "8.1.6", nombre: "Palabras con errores en la copia", max: null, asterisco: true, norma: "verificar" }, // asterisco confirmado
-      { id: "8.1.7", nombre: "Palabras con errores en la recuperación escrita", max: null, asterisco: false, norma: "verificar" } // VERIFICAR asterisco
+      { id: "8.1.7", nombre: "Palabras con errores en la recuperación escrita", max: null, asterisco: false, norma: "verificar" } // confirmado por clínica: SÍ suma (sin asterisco)
     ]},
     { id: "8.2", nombre: "Composición narrativa", agregacion: true, dcol: "escritura_composicion", pruebas: [
       { id: "8.2.1", nombre: "Coherencia narrativa", max: "7", asterisco: false, norma: true },

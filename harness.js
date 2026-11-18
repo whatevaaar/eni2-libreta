@@ -33,8 +33,14 @@ function makeNode(tag) {
     dispatch(ev) { (this._listeners[ev] || []).forEach((fn) => fn.call(node, {})); }
   };
   Object.defineProperty(node, "textContent", {
-    get() { return node._text; },
-    set(v) { node._text = v == null ? v : String(v); }
+    // Fiel al DOM real: un nodo hoja devuelve su texto; uno con hijos (p.ej. <text>
+    // con varias <tspan>) agrega el texto de su descendencia.
+    get() {
+      if (node._text != null) return node._text;
+      if (node.children.length) return node.children.map((c) => c.textContent || "").join("");
+      return node._text;
+    },
+    set(v) { node._text = v == null ? v : String(v); node.children = []; }
   });
   Object.defineProperty(node, "innerHTML", {
     get() { return ""; },
