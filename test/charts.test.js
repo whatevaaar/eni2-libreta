@@ -112,8 +112,8 @@ test("eje X: las bandas particionan el eje sin solapes ni fragmentación", () =>
     c.selectTab(tab);
     const svg = c.current();
     const W = Number(svg.getAttribute("width"));
-    // Fondos de grupo = intervalos reales de cada dominio (x..x+width).
-    const bg = [...c.byClass(svg, "dom-bg-a"), ...c.byClass(svg, "dom-bg-b")]
+    // Cajas de la franja de dominio = intervalos reales de cada grupo (teselan x..x+width).
+    const bg = c.byClass(svg, "dom-band")
       .map((n) => ({ x: Number(n.getAttribute("x")), w: Number(n.getAttribute("width")) }))
       .sort((a, b) => a.x - b.x);
     assert.ok(bg.length > 0, "hay bandas en pestaña " + tab);
@@ -147,20 +147,43 @@ test("eje X: la unificada agrupa por dominio en el orden exacto de la estructura
   assert.deepEqual(nums, esperado, "secuencia de dominios = RLE de la estructura");
 });
 
-test("eje X: cada etiqueta de dominio tiene tooltip con el nombre completo", () => {
+test("eje X: nombres de dominio y subdominio COMPLETOS, sin truncar (para reportes)", () => {
   const { app, vals } = conValores();
   const c = renderCharts(app);
   app.E.charts.actualizar(vals, EJE);
   c.selectTab(TAB.cognoscitivas);
-  const lbls = c.byClass(c.current(), "dom-band-lbl");
-  assert.equal(lbls.length, 9);
-  lbls.forEach((l) => {
-    const title = (l.children || []).find((ch) => ch.tag === "title");
-    assert.ok(title && title.textContent && title.textContent.length > 0, "tooltip presente");
-    // El texto visible empieza con el número de dominio del tooltip.
-    const num = title.textContent.split(" ")[0];
-    assert.ok(l.textContent.startsWith(num), "la etiqueta empieza por el número de dominio");
-  });
+  const svg = c.current();
+  // Nombre de dominio completo (rotado), uno por grupo, sin elipsis.
+  const domNames = c.byClass(svg, "dom-name").map((n) => n.textContent);
+  assert.equal(domNames.length, 9, "un nombre de dominio por grupo");
+  domNames.forEach((t) => assert.ok(!/…/.test(t), "dominio sin elipsis: " + t));
+  assert.ok(domNames.includes("1 · Habilidades construccionales"), "nombre de dominio completo");
+  // Nombres de subdominio completos, sin elipsis (antes se truncaban a 20).
+  const xlbls = c.byClass(svg, "xlbl").map((n) => n.textContent);
+  xlbls.forEach((t) => assert.ok(!/…/.test(t), "subdominio sin elipsis: " + t));
+  assert.ok(xlbls.includes("Memoria verbal-auditiva"), "subdominio completo presente");
+});
+
+test("puntos: muestran estándar y percentil cuando el valor los trae", () => {
+  const app = createApp(FILES.charts);
+  const c = renderCharts(app);
+  const sub = app.E.dominios[0].subdominios[0].id; // "1.1"
+  app.E.charts.actualizar({ [sub]: { estandar: 115, percentil: 84 } }, EJE);
+  const svg = c.current();
+  assert.equal(c.byClass(svg, "punto").length, 1);
+  assert.ok(c.byClass(svg, "pt-est").map((n) => n.textContent).includes("115"), "muestra la estándar");
+  assert.ok(c.byClass(svg, "pt-pct").map((n) => n.textContent).includes("84"), "muestra el percentil");
+});
+
+test("fondo: rangos cualitativos (clasificaciones) + líneas de corte", () => {
+  const { app, vals } = conValores();
+  const c = renderCharts(app);
+  app.E.charts.actualizar(vals, EJE); // eje 55..145 -> los 6 rangos y 5 cortes caen dentro
+  const svg = c.current();
+  const clasifs = c.byClass(svg, "rango-lbl").map((n) => n.textContent);
+  ["Muy bajo", "Límite", "Promedio bajo", "Normal o promedio", "Promedio alto", "Superior"]
+    .forEach((cl) => assert.ok(clasifs.includes(cl), "rango presente: " + cl));
+  assert.equal(c.byClass(svg, "corte").length, 5, "cortes en estándar 70/80/90/110/115");
 });
 
 test("ancho del SVG escala con el número de subdominios", () => {

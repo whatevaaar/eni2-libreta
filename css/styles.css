@@ -87,19 +87,25 @@ svg.perfil .ref{stroke:#9fb4c8;stroke-width:1;stroke-dasharray:4 3}
 svg.perfil .ref-media{stroke:var(--verde);stroke-width:1.3;stroke-dasharray:none}
 svg.perfil .serie{fill:none;stroke:var(--azul);stroke-width:2}
 svg.perfil .punto{fill:var(--azul)}
-svg.perfil .xlbl{fill:var(--tinta2);font-size:10px}
+svg.perfil .xlbl{fill:var(--tinta2);font-size:9px}
+/* Rangos cualitativos por percentil (fondo) */
+svg.perfil .rango{opacity:.65}
+svg.perfil .rango-lbl{fill:#5a6773;font-size:9.5px;font-weight:600;opacity:.8}
+svg.perfil .corte{stroke:#b9c6d4;stroke-width:1}
+/* Etiquetas de los puntos: estándar (arriba) + percentil (abajo) */
+svg.perfil .pt-est{fill:#1f6feb;font-size:10px;font-weight:700}
+svg.perfil .pt-pct{fill:#6b4e9e;font-size:9px}
 /* Eje Y doble: percentil (izq) / puntuación estándar (der) */
 svg.perfil .ylbl-pc{fill:#6b4e9e;font-size:10px}
 svg.perfil .ylbl-pe{fill:var(--tinta2);font-size:10px}
 svg.perfil .ylbl-media{fill:var(--verde);font-weight:700}
 svg.perfil .axis-title{fill:var(--tinta2);font-size:11px;font-weight:600}
 /* Agrupación por dominio en el eje X */
-svg.perfil .dom-bg-a{fill:#f6f9fc}
-svg.perfil .dom-bg-b{fill:#eef4fa}
 svg.perfil .dom-band{stroke:#cbd6e2;stroke-width:.8}
 svg.perfil .dom-band-a{fill:#e7eef6}
 svg.perfil .dom-band-b{fill:#dbe6f1}
 svg.perfil .dom-band-lbl{fill:#2c3e50;font-size:10.5px;font-weight:700}
+svg.perfil .dom-name{fill:#2c3e50;font-size:9.5px;font-weight:600}
 svg.perfil .dom-sep{stroke:#cbd6e2;stroke-width:1;stroke-dasharray:2 3}
 
 /* ---------- Modal ---------- */

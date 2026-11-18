@@ -44,6 +44,14 @@ test("estructura: 30 subdominios de agregación", () => {
   assert.equal(subsAgregacion(E).length, 30);
 });
 
+test("estructura: 8.1.7 cuenta en la suma (confirmado por clínica, sin asterisco)", () => {
+  const { E } = createApp(FILES.structure);
+  var p = null;
+  E.dominios.forEach((d) => d.subdominios.forEach((s) => s.pruebas.forEach((x) => { if (x.id === "8.1.7") p = x; })));
+  assert.ok(p, "existe la prueba 8.1.7");
+  assert.equal(p.asterisco, false, "sin asterisco => entra en la suma del subdominio");
+});
+
 test("compartida: escalares 1..19 con percentil y T", () => {
   const { E } = createApp(FILES.shared);
   for (let e = 1; e <= 19; e++) {

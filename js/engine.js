@@ -45,6 +45,21 @@
     return m ? (m[String(escalar)] || null) : null;
   }
 
+  // ---------- Puntuación estándar -> percentil (correspondencia del Manual) ----------
+  // El percentil de una estándar es el de su escolar equivalente (estándar = 100 + (e-10)*5)
+  // en la tabla compartida. Para estándar que no cae justo en un paso de 5 se usa la regla
+  // de piso (fila inferior), coherente con el resto del motor. Acepta número o notación de
+  // piso del Manual ("<51"). Se usa para autoderivar el percentil al corregir un subdominio.
+  function escalarDeEstandar(est) {
+    var e = 10 + Math.floor((est - 100) / 5);
+    return Math.max(1, Math.min(19, e));
+  }
+  function percentilDeEstandar(est) {
+    var num = (typeof est === "string") ? parseFloat(est.replace(/[^0-9.\-]/g, "")) : est;
+    if (num == null || isNaN(num)) return null;
+    return compartida(escalarDeEstandar(num)).percentil;
+  }
+
   // ---------- Tabla compartida escalar -> percentil/T ----------
   function compartida(escalar) {
     var ov = (E.store && E.store.getCompartida(escalar)) || baseCompartida(escalar);
@@ -213,6 +228,7 @@
     edadValida: edadValida,
     bandaDeEdad: bandaDeEdad,
     compartida: compartida,
+    percentilDeEstandar: percentilDeEstandar,
     brutoAEscalar: brutoAEscalar,
     rangoBruto: rangoBruto,
     calcularPrueba: calcularPrueba,
