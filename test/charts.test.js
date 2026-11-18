@@ -319,6 +319,17 @@ test("eje X: ninguna línea de etiqueta desborda el ancho de columna (antisolape
   });
 });
 
+test("exportarPNG: API presente y segura sin entorno de canvas (no lanza)", () => {
+  const app = createApp(FILES.charts);
+  const c = renderCharts(app);
+  app.E.charts.actualizar({}, EJE);
+  assert.equal(typeof app.E.charts.exportarPNG, "function");
+  // En el harness no hay window.getComputedStyle -> no exporta, pero NO debe lanzar.
+  assert.doesNotThrow(() => {
+    assert.equal(app.E.charts.exportarPNG(), false, "sin canvas devuelve false");
+  });
+});
+
 test("compacidad: pocas columnas NO generan hueco vertical excesivo (antirregresión)", () => {
   const { app, vals } = conValores();
   const c = renderCharts(app);
