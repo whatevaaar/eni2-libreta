@@ -16,8 +16,10 @@
   function construirHoja() {
     var cont = $("hoja");
     cont.innerHTML = "";
-    E.dominios.forEach(function (dom) {
+    E.dominios.forEach(function (dom, di) {
       var box = el("div", "dom");
+      // Acento de color por dominio (identidad visual; solo presentación).
+      box.style.setProperty("--dom-accent", "hsl(" + ((di * 41) % 360) + " 52% 46%)");
       var tbl = el("table", "sheet");
       var thead = el("thead");
       thead.appendChild(filaEncabezado());
@@ -67,7 +69,7 @@
       est.addEventListener("click", function () { abrirApendiceD(sub); });
       var pct = el("td", "col-pctsub celda-agg"); pct.id = "pctsub-" + sub.id; pct.textContent = "—";
       var fte = el("td", "col-fuente celda-agg");
-      var b = el("button", "fuente-btn", "ver D"); b.title = "Apéndice D (suma→estándar)";
+      var b = el("button", "fuente-btn", "ver D"); b.title = "Apéndice D (suma→estándar)"; b.tabIndex = -1;
       b.addEventListener("click", function () { abrirApendiceD(sub); });
       fte.appendChild(b);
       tr.appendChild(suma); tr.appendChild(est); tr.appendChild(pct); tr.appendChild(fte);
@@ -105,7 +107,7 @@
     tr.appendChild(suma); tr.appendChild(est); tr.appendChild(pctsub);
 
     var tdF = el("td", "col-fuente celda-agg");
-    var fb = el("button", "fuente-btn", "ver"); fb.title = "Ver tabla fuente";
+    var fb = el("button", "fuente-btn", "ver"); fb.title = "Ver tabla fuente"; fb.tabIndex = -1;
     fb.addEventListener("click", function () { abrirFuentePrueba(p); });
     tdF.appendChild(fb); tr.appendChild(tdF);
 
@@ -143,7 +145,7 @@
 
     // Fuente
     var tdF = el("td", "col-fuente");
-    var fb = el("button", "fuente-btn", "ver"); fb.title = "Ver tabla fuente de esta prueba";
+    var fb = el("button", "fuente-btn", "ver"); fb.title = "Ver tabla fuente de esta prueba"; fb.tabIndex = -1;
     fb.addEventListener("click", function () { abrirFuentePrueba(p); });
     tdF.appendChild(fb); tr.appendChild(tdF);
 
@@ -196,7 +198,7 @@
         sumaCell.title = s.faltantes.length ? ("Faltan escalares: " + s.faltantes.join(", ")) : "";
         estCell.dataset.suma = s.suma;
         var d = eng.apendiceD(sub.dcol, s.suma);
-        var btnEdit = ' <button class="fuente-btn" data-edit-d="1" title="Corregir puntuación estándar">✎</button>';
+        var btnEdit = ' <button class="fuente-btn" data-edit-d="1" title="Corregir puntuación estándar" tabindex="-1">✎</button>';
         if (d.estandar != null) {
           var corr = d.fuente === "correccion";
           var avisoD = (d.borde === "sobre_maximo" || d.borde === "bajo_minimo")
@@ -231,7 +233,7 @@
     if (r.aviso === "bruto_fuera_rango" || r.borde === "sobre_maximo" || r.borde === "bajo_minimo")
       avisoBorde = '<span class="aviso-borde" title="Bruto fuera del rango de la tabla; se aplicó regla de borde"> ⚠</span>';
     tdE.innerHTML = '<span class="' + clase + '">' + txt + '</span>' + chip + avisoBorde +
-                    ' <button class="fuente-btn" data-edit="1">✎</button>';
+                    ' <button class="fuente-btn" data-edit="1" tabindex="-1">✎</button>';
     tdE.querySelector('[data-edit]').addEventListener("click", function () { editarEscalar(p); });
     tdP.textContent = (r.percentil != null) ? fmt(r.percentil) : "—";
   }

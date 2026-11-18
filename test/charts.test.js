@@ -254,3 +254,77 @@ test("init es idempotente respecto al set de pestañas esperado", () => {
     "Unificada (todos los subdominios)"
   ]);
 });
+
+/* ---------- Rediseño visual (marcado): título, etiquetas horizontales, compacidad ---------- */
+
+test("título del perfil dentro del SVG (imagen autoexplicativa para reportes)", () => {
+  const { app, vals } = conValores();
+  const c = renderCharts(app);
+  app.E.charts.actualizar(vals, EJE);
+  const esperado = {
+    [TAB.cognoscitivas]: "Funciones cognoscitivas",
+    [TAB.ejecutivas]: "Funciones ejecutivas",
+    [TAB.academicas]: "Habilidades de rendimiento académico",
+    [TAB.unificada]: "Unificada (todos los subdominios)"
+  };
+  Object.keys(esperado).forEach((tab) => {
+    c.selectTab(Number(tab));
+    const tit = c.byClass(c.current(), "perfil-titulo").map((n) => n.textContent);
+    assert.ok(tit.includes(esperado[tab]), "título presente: " + esperado[tab]);
+  });
+});
+
+test("eje X: etiquetas de subdominio y dominio HORIZONTALES (sin rotar), centradas", () => {
+  const { app, vals } = conValores();
+  const c = renderCharts(app);
+  app.E.charts.actualizar(vals, EJE);
+  c.selectTab(TAB.cognoscitivas);
+  const svg = c.current();
+  const comprobar = (cls) => c.byClass(svg, cls).forEach((n) => {
+    assert.equal(anchorOf(n), "middle", cls + " centrada");
+    assert.ok(!n.getAttribute("transform"), cls + " sin rotación");
+  });
+  comprobar("xlbl");
+  comprobar("dom-name");
+});
+
+test("etiquetas largas se envuelven en varias líneas conservando el texto exacto", () => {
+  const { app, vals } = conValores();
+  const c = renderCharts(app);
+  app.E.charts.actualizar(vals, EJE);
+  c.selectTab(TAB.ejecutivas);
+  const svg = c.current();
+  // "Planeación y organización" no cabe en una columna -> debe partirse en >1 <tspan>
+  const larga = c.byClass(svg, "xlbl").find((n) => n.textContent === "Planeación y organización");
+  assert.ok(larga, "subdominio largo presente con su texto íntegro");
+  assert.ok(larga.children.length > 1, "se envolvió en varias líneas (tspans)");
+  // Cada línea es una <tspan>; su concatenación reproduce el nombre original (sin recortes).
+  assert.ok(larga.children.every((ts) => ts.tag === "tspan"));
+});
+
+test("eje X: ninguna línea de etiqueta desborda el ancho de columna (antisolape)", () => {
+  const { app, vals } = conValores();
+  const c = renderCharts(app);
+  app.E.charts.actualizar(vals, EJE);
+  // Incluye nombres con palabras muy largas ("metalingüísticas", "sobrepuestas"): el
+  // corte duro debe mantener cada línea dentro del presupuesto de la columna (~9 chars).
+  [TAB.cognoscitivas, TAB.academicas, TAB.unificada].forEach((tab) => {
+    c.selectTab(tab);
+    c.byClass(c.current(), "xlbl").forEach((n) => {
+      n.children.forEach((ts) => {
+        assert.ok(ts.textContent.length <= 12,
+          "línea de subdominio acotada a la columna (pestaña " + tab + "): «" + ts.textContent + "»");
+      });
+    });
+  });
+});
+
+test("compacidad: pocas columnas NO generan hueco vertical excesivo (antirregresión)", () => {
+  const { app, vals } = conValores();
+  const c = renderCharts(app);
+  app.E.charts.actualizar(vals, EJE);
+  c.selectTab(TAB.ejecutivas);
+  const h = Number(c.current().getAttribute("height"));
+  // Antes del rediseño el doble tier rotado llevaba la altura a ~600+. Cota de guarda.
+  assert.ok(h < 520, "altura de ejecutivas acotada (obtenida " + h + ")");
+});
