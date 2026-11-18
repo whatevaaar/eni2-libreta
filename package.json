@@ -1,0 +1,10 @@
+{
+  "name": "eni2-libreta",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ENI-2 · Asistente de la Libreta de Puntajes — tests del motor, gráficas, store y datos (sin dependencias).",
+  "scripts": {
+    "test": "node --test"
+  },
+  "license": "SEE README"
+}
