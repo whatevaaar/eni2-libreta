@@ -386,6 +386,11 @@
     });
     $("btn-imprimir").addEventListener("click", function () { window.print(); });
 
+    var btnPng = $("btn-png");
+    if (btnPng) btnPng.addEventListener("click", function () {
+      if (!E.charts || !E.charts.exportarPNG()) alert("No hay gráfica para exportar todavía.");
+    });
+
     document.querySelectorAll("[data-cerrar]").forEach(function (b) { b.addEventListener("click", cerrarModal); });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape") cerrarModal(); });
   }

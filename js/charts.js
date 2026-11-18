@@ -77,7 +77,7 @@
   ];
   var CORTES = [70, 80, 90, 110, 115];
 
-  var tabsEl, contEl, activo = "cognoscitivas", ultimos = {}, ejeYActual = null;
+  var tabsEl, contEl, activo = "cognoscitivas", ultimos = {}, ejeYActual = null, svgActual = null;
 
   function init(tabs, cont) {
     tabsEl = tabs; contEl = cont;
@@ -103,7 +103,73 @@
     var p = PERFILES[activo];
     var ejeY = ejeYActual || { min: E.meta.ejeY.min, max: E.meta.ejeY.max, lineas: true, ref: E.meta.ejeY.lineasRef };
     contEl.innerHTML = "";
-    contEl.appendChild(svgPerfil(p, ultimos, ejeY));
+    svgActual = svgPerfil(p, ultimos, ejeY);
+    contEl.appendChild(svgActual);
+  }
+
+  // ---------- Exportar la gráfica activa como PNG ----------
+  // El SVG usa clases del CSS externo; al rasterizarlo de forma aislada ese CSS no viaja,
+  // así que inlineamos los estilos COMPUTADOS (colores, fuentes, halos) en el clon. Pura
+  // vector (sin <image>) => el canvas no queda "tainted" y toBlob/toDataURL funcionan.
+  var PROPS_SVG = ["fill", "fill-opacity", "stroke", "stroke-opacity", "stroke-width",
+    "stroke-dasharray", "stroke-linejoin", "stroke-linecap", "opacity", "font-family",
+    "font-size", "font-weight", "font-style", "text-anchor", "paint-order", "letter-spacing"];
+
+  function inlineEstilos(orig, clon) {
+    var cs = window.getComputedStyle(orig);
+    var decl = "";
+    PROPS_SVG.forEach(function (p) { var v = cs.getPropertyValue(p); if (v) decl += p + ":" + v + ";"; });
+    clon.setAttribute("style", decl);
+    var oc = orig.children || [], cc = clon.children || [];
+    for (var i = 0; i < oc.length; i++) inlineEstilos(oc[i], cc[i]);
+  }
+
+  function descargar(url, nombre, revocar) {
+    var a = document.createElement("a");
+    a.href = url; a.download = nombre; a.rel = "noopener";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    if (revocar) setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+  }
+
+  // escala: factor de resolución (2 => nítido para reportes). Devuelve false si no aplica.
+  function exportarPNG(escala) {
+    if (!svgActual || typeof window.getComputedStyle !== "function" ||
+        typeof document.createElement !== "function") return false;
+    escala = escala || 2;
+    var W = Number(svgActual.getAttribute("width"));
+    var H = Number(svgActual.getAttribute("height"));
+    if (!W || !H) return false;
+
+    var clon = svgActual.cloneNode(true);
+    clon.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    clon.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
+    inlineEstilos(svgActual, clon);
+
+    var xml = new XMLSerializer().serializeToString(clon);
+    var url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(xml);
+    var nombre = "ENI2-perfil-" + activo + ".png";
+    var img = new Image();
+    img.onload = function () {
+      var canvas = document.createElement("canvas");
+      canvas.width = Math.round(W * escala);
+      canvas.height = Math.round(H * escala);
+      var ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#ffffff";                 // fondo blanco (mejor para pegar en reportes)
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.setTransform(escala, 0, 0, escala, 0, 0);
+      ctx.drawImage(img, 0, 0);
+      if (canvas.toBlob) {
+        canvas.toBlob(function (blob) {
+          if (!blob) { alert("No se pudo generar el PNG."); return; }
+          descargar(URL.createObjectURL(blob), nombre, true);
+        }, "image/png");
+      } else {
+        descargar(canvas.toDataURL("image/png"), nombre, false);
+      }
+    };
+    img.onerror = function () { alert("No se pudo generar el PNG de la gráfica."); };
+    img.src = url;
+    return true;
   }
 
   // Runs contiguos de subdominios del mismo dominio (para agrupar el eje X).
@@ -339,5 +405,5 @@
     return svg;
   }
 
-  E.charts = { init: init, actualizar: actualizar };
+  E.charts = { init: init, actualizar: actualizar, exportarPNG: exportarPNG };
 })();
