@@ -37,6 +37,18 @@ test("edadValida / bandaDeEdad: límites y rangos inválidos", () => {
   assert.equal(E.engine.bandaDeEdad(4, 0), null, "edad inválida -> null");
 });
 
+test("percentilDeEstandar: correspondencia del Manual con regla de piso", () => {
+  const { E } = createApp(FILES.engine);
+  var p = E.engine.percentilDeEstandar;
+  assert.equal(p(100), 50, "media");
+  assert.equal(p(90), 26);
+  assert.equal(p(70), 2);
+  assert.equal(p(145), 99);
+  assert.equal(p(55), 0.1, "piso de la escala");
+  assert.equal(p(93), 26, "no múltiplo de 5 -> fila inferior (90)");
+  assert.equal(p("<51"), 0.1, "acepta notación de piso del Manual");
+});
+
 test("filasPrueba: normaliza min/max intercambiados y ordena asc", () => {
   const app = createApp(FILES.engine);
   app.E.tablas = { "7": { pruebas: { "X": { escalares: [

@@ -179,7 +179,7 @@
     });
 
     // Agregaciones (subdominios) + Apéndice D
-    var valoresPerfil = {}; // subId -> estandar
+    var valoresPerfil = {}; // subId -> { estandar, percentil } (para los puntos de la gráfica)
     E.dominios.forEach(function (dom) {
       dom.subdominios.forEach(function (sub) {
         if (!sub.agregacion) return;
@@ -199,10 +199,12 @@
         var btnEdit = ' <button class="fuente-btn" data-edit-d="1" title="Corregir puntuación estándar">✎</button>';
         if (d.estandar != null) {
           var corr = d.fuente === "correccion";
+          var avisoD = (d.borde === "sobre_maximo" || d.borde === "bajo_minimo")
+            ? '<span class="aviso-borde" title="Suma fuera del rango de la tabla; se tomó el valor tope/piso del Apéndice D"> ⚠</span>' : "";
           estCell.innerHTML = '<span class="estandar' + (corr ? ' val-correccion' : '') + '">' + d.estandar + '</span>' +
-            (corr ? '<span class="chip chip-corr">corr</span>' : '') + btnEdit;
+            (corr ? '<span class="chip chip-corr">corr</span>' : '') + avisoD + btnEdit;
           pctCell.textContent = fmt(d.percentil);
-          valoresPerfil[sub.id] = d.estandar;
+          valoresPerfil[sub.id] = { estandar: d.estandar, percentil: d.percentil };
         } else {
           estCell.innerHTML = '<span class="val-pendiente">captúralo</span>' + btnEdit;
           pctCell.textContent = "—";
@@ -274,16 +276,14 @@
     var suma = estCell ? estCell.dataset.suma : null;
     if (suma == null) { alert("Captura primero los brutos de este subdominio para obtener la suma de escalares."); return; }
     var cur = eng.apendiceD(sub.dcol, suma);
-    var ve = prompt("Puntuación estándar correcta para «" + sub.nombre + "» (suma de escalares = " + suma + "):\nUsa un número (p.ej. 70) o la notación del Manual (p.ej. <51). Vacío = quitar la corrección.", cur.estandar != null ? cur.estandar : "");
+    var ve = prompt("Puntuación estándar correcta para «" + sub.nombre + "» (suma de escalares = " + suma + "):\nUsa un número (p.ej. 70) o la notación del Manual (p.ej. <51). Vacío = quitar la corrección.\nEl percentil se calcula automáticamente a partir de la estándar.", cur.estandar != null ? cur.estandar : "");
     if (ve === null) return;
     var pe = parseValorBaremo(ve);
     if (pe.empty) { store.setApendiceD(sub.dcol, String(suma), null); recompute(); return; }
     if (pe.invalido) { alert("Valor inválido. Usa un número (70) o la notación del Manual (<51)."); return; }
-    var vp = prompt("Percentil correspondiente (p.ej. 2 o <0.1):", cur.percentil != null ? cur.percentil : "");
-    if (vp === null) return;
-    var pp = parseValorBaremo(vp);
-    if (pp.invalido) { alert("Percentil inválido. Usa un número (2) o la notación del Manual (<0.1)."); return; }
-    store.setApendiceD(sub.dcol, String(suma), { estandar: pe.valor, percentil: pp.empty ? null : pp.valor, t: cur.t });
+    // El percentil se deriva de la estándar (correspondencia del Manual): quedan siempre coherentes.
+    var percentil = eng.percentilDeEstandar(pe.valor);
+    store.setApendiceD(sub.dcol, String(suma), { estandar: pe.valor, percentil: percentil, t: cur.t });
     recompute();
   }
 

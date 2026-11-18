@@ -94,6 +94,10 @@ auto-extraídos (`tablas.js`, `apendiceD.js`) **pueden tener ruido**. Por eso:
   `captúralo` (sin valor auto; léelo de la imagen).
 - Las correcciones se guardan por `(banda, prueba, bruto)` o `(dcol, suma)` y se
   aplican en adelante. **Nunca inventes valores de baremo.**
+- **Coherencia estándar↔percentil:** al corregir una prueba, el percentil se deriva del
+  escalar (tabla compartida). Al corregir un subdominio, se captura **solo la estándar** y
+  el percentil se autoderiva con `engine.percentilDeEstandar(est)` (correspondencia del
+  Manual, regla de piso). Así nunca quedan un par estándar/percentil inconsistentes.
 
 **Notación de piso del Manual:** valores como `"<51"`, `"<0.1"` son válidos como
 **valor de baremo / etiqueta** (salida del Apéndice D, graficado), **no** como bruto de
@@ -106,11 +110,20 @@ numérica cumple el umbral de graficado `num ≥ ejeY.min − 50` (con el eje po
 
 3 perfiles de la Libreta (cognoscitivas, ejecutivas, académicas) + 1 unificada. SVG puro.
 
-- **Eje Y = puntuación estándar**, editable, con líneas de referencia (media 100 y ±DE:
-  70/85/100/115/130). **Doble escala:** percentil a la izquierda, estándar a la derecha
-  (el percentil se deriva de la estándar por CDF normal; títulos de eje a cada lado).
-- **Eje X = subdominios**, agrupados por dominio: bandas de fondo alternas, franja
-  rotulada con número+nombre de dominio (tooltip con nombre completo) y separadores.
+- **Eje Y = puntuación estándar**, editable. **Doble escala:** percentil a la izquierda,
+  estándar a la derecha (etiquetas del eje por CDF normal continua; títulos a cada lado).
+  Líneas de referencia ±DE (media 100 y 70/85/100/115/130) con toggle.
+- **Fondo = rangos cualitativos por percentil** (pág. 161 del Manual), dibujados en
+  puntuación estándar vía la correspondencia del Manual. Cortes en estándar
+  **70 / 80 / 90 / 110 / 115** → Muy bajo ≤70 · Límite 70–80 · Promedio bajo 80–90 ·
+  Normal 90–110 · Promedio alto 110–115 · Superior >115. (`RANGOS`/`CORTES` en `charts.js`.)
+- **Puntos:** en cada subdominio se muestran **estándar (arriba) y percentil (abajo)**.
+  `valoresPerfil[subId] = { estandar, percentil }` (compat: un valor suelto = estándar).
+  El percentil es el real del Apéndice D (no el del CDF del eje).
+- **Eje X = subdominios**, agrupados por dominio: franja con el número de dominio +
+  separadores + **nombre de dominio completo rotado**; etiquetas de subdominio
+  **completas, sin truncar** (la clínica pega la imagen en reportes). Por eso el SVG
+  crece en alto para que quepa el texto rotado.
 - Solo grafica donde hay valor; traza segmentos entre puntos consecutivos existentes.
 
 Las funciones internas de `charts.js` no se exportan; se validan vía el SVG renderizado.
